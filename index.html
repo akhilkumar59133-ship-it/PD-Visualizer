@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PD Graph Visualizer</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+  <button class="admin-icon" onclick="toggleAdmin()">ADMIN</button>
+  <h1 class="viewer-title">Graph Visualizer</h1>
+  <div id="statusBox" class="status-box">&#8987; Waiting for first approved graph...</div>
+  <div id="graphInfo" class="graph-info hidden"><span class="live-dot"></span><span id="paramsLabel"></span></div>
+  <div id="viewerGraph" class="hidden">
+    <div class="g-card">
+      <div class="g-card-title" id="graphTitle">Simulated Results of Q<sub>peak</sub> &middot; MATLAB Simulink</div>
+      <div class="mat-box" id="matBoxV" style="height:440px;"><canvas id="matCanvasV"></canvas></div>
+      <div class="chips">
+        <div class="chip">PDIV<span class="v" id="c_Pdiv">&mdash;</span></div>
+        <div class="chip">Q<sub>peak</sub><span class="v" id="c_Qpeak">&mdash;</span></div>
+        <div class="chip">Q<sub>avg</sub><span class="v" id="c_Qavg">&mdash;</span></div>
+        <div class="chip">N<sub>PD</sub>/cycle<span class="v" id="c_Npd">&mdash;</span></div>
+        <div class="chip">Material<span class="v" id="c_Mat">&mdash;</span></div>
+        <div class="chip">Gas<span class="v" id="c_Gas">&mdash;</span></div>
+        <div class="chip">Gap<span class="v" id="c_Gap">&mdash;</span></div>
+        <div class="chip">Thickness<span class="v" id="c_Thick">&mdash;</span></div>
+      </div>
+      <p class="pd-caption"><strong>Simulated results of Q<sub>peak</sub></strong> using MATLAB for
+        <span id="cap_mat">Cu</span> particles at <span id="cap_gas">CO&#x2082;:SF&#x2086; @ 0.1 MPa</span></p>
+    </div>
+  </div>
+</div>
+
+<div id="adminPanel" class="admin-panel">
+  <div class="admin-box">
+    <button class="btn btn-close" onclick="toggleAdmin()">&times;</button>
+
+    <!-- LOGIN SECTION -->
+    <div id="loginSec" class="login-sec">
+      <h2>Admin Login</h2>
+      <!-- Session-blocked banner (shown when another session is active) -->
+      <div id="sessionBlockedBanner" class="session-blocked hidden">
+        <div class="sb-icon">&#128274;</div>
+        <div class="sb-title">Admin Already Logged In</div>
+        <div class="sb-msg" id="sessionBlockedMsg">Another admin session is currently active.<br>Only one admin can be logged in at a time.</div>
+        <button class="btn-force" onclick="forceLogin()">&#9888; Force Login (Kick Other Session)</button>
+      </div>
+      <div id="loginForm" class="form-grid" style="max-width:460px;margin:0 auto;">
+        <div class="fg"><label>Username</label><input type="text" id="uname" placeholder="Enter username"></div>
+        <div class="fg"><label>Password</label><input type="password" id="pword" placeholder="Enter password"></div>
+        <button type="button" class="btn btn-login" onclick="doLogin(false)">LOGIN</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <div id="dashSec" class="dash-sec hidden">
+      <h2>PD Simulation Generator</h2>
+      <div class="session-badge" id="sessionBadge">&#128994; Session active &mdash; <span id="sessionId"></span></div><br>
+      <button class="btn btn-logout" style="width:auto;margin-bottom:8px;" onclick="doLogout()">Logout</button>
+      <div class="form-grid">
+        <div class="fg"><label>Insulating Media</label>
+          <select id="aGas">
+            <option value="AIR_0091">Air </option>
+            <option value="CO2SF6_01">CO&#x2082;:SF&#x2086;</option>
+            <option value="N2SF6_01">N&#x2082;:SF&#x2086; </option>
+            <option value="HFC_N2">HFC-227ea:N&#x2082;</option>
+          </select>
+        </div>
+        <div class="fg"><label>Particle</label>
+          <select id="aMat">
+            <option value="Copper">COPPER</option>
+            <option value="Aluminium">ALUMINIUM</option>
+            <option value="Polypropylene">POLYPROPYLENE</option>
+            <option value="Teflon">TEFLON</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Gap Distance (mm) <span style="color:#8aaad0;font-weight:400;">[0 – 20]</span></label>
+          <input type="number" id="aGap" min="0" max="20" step="0.1" value="10"
+                 onblur="validateField(this,0,20,'Gap Distance','mm')">
+        </div>
+        <div class="fg">
+          <label>Pressure (MPa) <span style="color:#8aaad0;font-weight:400;">[0 – 10]</span></label>
+          <input type="number" id="aPressure" min="0" max="10" step="0.001" value="0.100"
+                 onblur="validateField(this,0,10,'Pressure','MPa')">
+        </div>
+        <div class="fg">
+          <label>&#949;r <span style="color:#8aaad0;font-weight:400;">[0 – 50]</span></label>
+          <input type="number" id="aEr" min="0" max="50" step="0.01" value="28.11"
+                 onblur="validateField(this,0,50,'εr','')">
+        </div>
+        <div class="fg">
+          <label>Vrms (kV) <span style="color:#8aaad0;font-weight:400;">[0 – 20]</span></label>
+          <input type="number" id="aVrms" min="0" max="20" step="0.001" value="2.546"
+                 onblur="validateField(this,0,20,'Vrms','kV')">
+        </div>
+        <div class="result-box hidden" id="resultBox"></div>
+        <button type="button" class="btn btn-gen" onclick="doGenerate()">Generate Graph</button>
+      </div>
+      <div id="prevSec" class="hidden">
+        <h3 style="color:#1a4fd6;text-align:center;margin-bottom:14px;font-size:18px;">Preview</h3>
+        <div class="prev-block">
+          <div class="prev-lbl" id="prevTitle">MATLAB Preview</div>
+          <div class="mat-box" id="matBoxP" style="height:300px;"><canvas id="matCanvasP"></canvas></div>
+          <div class="chips" style="margin-top:10px;">
+            <div class="chip">PDIV<span class="v" id="p_Pdiv">&mdash;</span></div>
+            <div class="chip">Q<sub>peak</sub><span class="v" id="p_Qpeak">&mdash;</span></div>
+            <div class="chip">Q<sub>avg</sub><span class="v" id="p_Qavg">&mdash;</span></div>
+            <div class="chip">N/cycle<span class="v" id="p_Npd">&mdash;</span></div>
+          </div>
+        </div>
+        <button class="btn btn-approve" onclick="doApprovePreview()">APPROVE &amp; GO LIVE</button>
+      </div>
+      <div style="margin-top:22px;">
+        <h3 style="color:#1a4fd6;margin-bottom:12px;font-size:18px;">Pending Graphs</h3>
+        <div id="pendList" style="color:#5a7aaa;padding:12px;text-align:center;font-size:14px;">Generate first graph!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Validation Popup ── -->
+<div id="valOverlay" class="val-overlay" style="display:none;" onclick="closeValPopup(event)">
+  <div class="val-box" onclick="event.stopPropagation()">
+    <div class="val-icon">&#9888;&#65039;</div>
+    <div class="val-title">Value Out of Range</div>
+    <div class="val-msg" id="valMsg"></div>
+    <button class="val-ok" onclick="closeValPopup()">OK, Got it</button>
+  </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
