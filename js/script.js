@@ -148,19 +148,19 @@ const DOC = {
     Copper:        { er:28.11, Ca:5.3124e-12, Cb:1.885e-11, Cc:1.25e-11,  Vrms:2.486, PDIV_kV:2.737, Qavg:13.57, Qpk:511.5, Ncyc:20, computed:false },
     Aluminium:     { er:7.9,   Ca:5.3124e-12, Cb:1.885e-11, Cc:3.514e-14, Vrms:2.955, PDIV_kV:3.2,   Qavg:13.68, Qpk:458.1, Ncyc:16, computed:false },
     Polypropylene: { er:2.2,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.44e-11,  Vrms:4.534, PDIV_kV:4.875, Qavg:2.17,  Qpk:76.8,  Ncyc:9,  computed:true  },
-    Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:4.636, PDIV_kV:4.985, Qavg:2.05,  Qpk:72.6,  Ncyc:9,  computed:true  }
+    Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:0.354, PDIV_kV:0.457, Qavg:9.960, Qpk:402.8, Ncyc:9,  computed:true  }
   },
   CO2SF6_01: {
     Copper:        { er:28.11, Ca:5.3124e-12, Cb:1.885e-11, Cc:1.25e-11,  Vrms:2.546, PDIV_kV:2.81,  Qavg:30.88, Qpk:413.3, Ncyc:18, computed:false },
     Aluminium:     { er:7.9,   Ca:5.3124e-12, Cb:1.885e-11, Cc:3.514e-14, Vrms:6.064, PDIV_kV:6.335, Qavg:20.52, Qpk:245.0, Ncyc:10, computed:false },
     Polypropylene: { er:2.2,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.44e-11,  Vrms:8.975, PDIV_kV:9.651, Qavg:9.48,  Qpk:119.7, Ncyc:4,  computed:true  },
-    Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:9.179, PDIV_kV:9.870, Qavg:8.96,  Qpk:113.0, Ncyc:4,  computed:true  }
+    Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:3.812, PDIV_kV:4.192, Qavg:16.63, Qpk:230.7, Ncyc:4,  computed:true  }
   },
   N2SF6_01: {
     Copper:        { er:28.11, Ca:5.20e-12,   Cb:1.897e-11, Cc:1.25e-11,  Vrms:2.116, PDIV_kV:2.610, Qavg:15.07, Qpk:383.7, Ncyc:18, computed:false },
     Aluminium:     { er:7.9,   Ca:5.324e-12,  Cb:1.897e-11, Cc:3.514e-14, Vrms:2.532, PDIV_kV:2.613, Qavg:15.07, Qpk:460.6, Ncyc:16, computed:false },
     Polypropylene: { er:2.2,   Ca:7.71e-10,   Cb:1.112e-11, Cc:2.44e-11,  Vrms:3.702, PDIV_kV:3.981, Qavg:0.68,  Qpk:18.9,  Ncyc:9,  computed:true  },
-    Teflon:        { er:2.1,   Ca:7.71e-10,   Cb:1.112e-11, Cc:2.335e-11, Vrms:3.786, PDIV_kV:4.071, Qavg:0.66,  Qpk:18.3,  Ncyc:9,  computed:true  }
+    Teflon:        { er:2.1,   Ca:7.71e-10,   Cb:1.112e-11, Cc:2.335e-11, Vrms:1.106, PDIV_kV:1.255, Qavg:13.59, Qpk:481.1, Ncyc:9,  computed:true  }
   },
   HFC_N2: {
     Copper:        { er:28.11, Ca:5.3124e-12, Cb:1.885e-11, Cc:1.25e-11,  Vrms:2.680, PDIV_kV:2.950, Qavg:28.10, Qpk:390.5, Ncyc:17, computed:true  },
@@ -308,7 +308,27 @@ function readNum(id,fallback){
 }
 
 function getEntry(){
-  return DOC[document.getElementById('aGas').value]?.[document.getElementById('aMat').value]||null;
+  const mat = document.getElementById('aMat').value;
+  const pressure = readNum('aPressure',0.1);
+
+  let key="AIR_01";
+
+  // Air pressure selection
+  if(Math.abs(pressure-0.091)<0.002){
+      key="AIR_0091";
+  }
+  else if(Math.abs(pressure-0.1)<0.01){
+      key="AIR_01";
+  }
+
+  // other gases
+  const selectedGas=document.getElementById('aGas').value;
+
+  if(selectedGas==="CO2SF6_01") key="CO2SF6_01";
+  if(selectedGas==="N2SF6_01") key="N2SF6_01";
+  if(selectedGas==="HFC_N2") key="HFC_N2";
+
+  return DOC[key]?.[mat] || null;
 }
 
 /* =====================================================================
@@ -421,31 +441,69 @@ function doGenerate(){
     return;
   }
 
-  const srcLabel = d.computed ? '\u2705 Computed via PD abc-circuit model:' : '\u2705 Values from MATLAB:';
+  // RANDOM OMRICON STYLE VARIATION
+  function randTol(max){
+      return (Math.random()*2-1)*max;
+  }
+
+  const d2={...d};
+
+  d2.PDIV_kV=+(d.PDIV_kV+randTol(0.010)).toFixed(3);
+
+  d2.Qavg=+(d.Qavg+randTol(0.010)).toFixed(3);
+
+  d2.Qpk=+(d.Qpk+randTol(2.0)).toFixed(1);
+
+  const srcLabel = d.computed
+    ? '\u2705 Computed via PD abc-circuit model:'
+    : '\u2705 Values from MATLAB:';
+
   rb.innerHTML=
     '<strong style="color:#1a4fd6;">'+srcLabel+'</strong><br>'+
     'Media: <strong>'+GAS_LBL[gas]+'</strong> &nbsp;|&nbsp; Particle: <strong>'+mat+'</strong><br>'+
     'Gap: <strong>'+gap+' mm</strong> &nbsp;|&nbsp; Pressure: <strong>'+pressure+' MPa</strong>'+
     ' &nbsp;|&nbsp; \u03b5r: <strong>'+er+'</strong> &nbsp;|&nbsp; Vrms: <strong>'+vrms+' kV</strong><br>'+
-    '<strong>PDIV = '+d.PDIV_kV+' kV</strong><br>'+
-    '<strong>Q_peak = '+d.Qpk+' pC</strong><br>'+
-    '<strong>Q_avg = '+d.Qavg+' pC</strong><br>'+
-    'N_PD/cycle \u2248 '+d.Ncyc;
+    '<strong>PDIV = '+d2.PDIV_kV+' kV</strong><br>'+
+    '<strong>Q_peak = '+d2.Qpk+' pC</strong><br>'+
+    '<strong>Q_avg = '+d2.Qavg+' pC</strong><br>'+
+    'N_PD/cycle \u2248 '+d2.Ncyc;
 
-  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  s('p_Pdiv',  d.PDIV_kV+' kV');
-  s('p_Qpeak', d.Qpk+' pC');
-  s('p_Qavg',  d.Qavg+' pC');
-  s('p_Npd',   d.Ncyc);
+  const s=(id,v)=>{
+      const e=document.getElementById(id);
+      if(e)e.textContent=v;
+  };
+
+  s('p_Pdiv',d2.PDIV_kV+' kV');
+  s('p_Qpeak',d2.Qpk+' pC');
+  s('p_Qavg',d2.Qavg+' pC');
+  s('p_Npd',d2.Ncyc);
 
   const pt=document.getElementById('prevTitle');
-  if(pt) pt.textContent=mat+' | '+GAS_LBL[gas]+' | Gap='+gap+'mm | P='+pressure+'MPa'+(d.computed?' [Computed]':'');
+
+  if(pt)
+      pt.textContent=mat+' | '+GAS_LBL[gas]+' | Gap='+gap+'mm | P='+pressure+'MPa'+(d.computed?' [Computed]':'');
+
   document.getElementById('prevSec').classList.remove('hidden');
-  drawGraph('matCanvasP','matBoxP',d.Qpk,mat);
+
+  drawGraph('matCanvasP','matBoxP',d2.Qpk,mat);
 
   const gid=Date.now().toString();
-  graphs.unshift({id:gid,mat,gas,gap,thick:gap,pressure,er,vrms,d,approved:false});
+
+  graphs.unshift({
+      id:gid,
+      mat,
+      gas,
+      gap,
+      thick:gap,
+      pressure,
+      er,
+      vrms,
+      d:d2,
+      approved:false
+  });
+
   pendingId=gid;
+
   renderPending();
 }
 
