@@ -156,11 +156,31 @@ const DOC = {
     Polypropylene: { er:2.2,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.44e-11,  Vrms:8.975, PDIV_kV:9.651, Qavg:9.48,  Qpk:119.7, Ncyc:4,  computed:true  },
     Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:3.812, PDIV_kV:4.192, Qavg:16.63, Qpk:230.7, Ncyc:4,  computed:true  }
   },
+  CO2SF6_02: {
+    Copper:        { er:28.11, Ca:5.3124e-12, Cb:1.885e-11, Cc:1.25e-11,  Vrms:5.090,  PDIV_kV:5.920, Qavg:25.30, Qpk:263.5, Ncyc:18, computed:false },
+    Aluminium:     { er:7.9,   Ca:5.3124e-12, Cb:1.885e-11, Cc:3.514e-14, Vrms:12.128, PDIV_kV:6.740, Qavg:23.86, Qpk:317.5, Ncyc:10, computed:false },
+    Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:7.624,  PDIV_kV:4.570, Qavg:17.04, Qpk:292.3, Ncyc:4, computed:true }
+  },
+  CO2SF6_03: {
+    Copper:        { er:28.11, Ca:5.3124e-12, Cb:1.885e-11, Cc:1.25e-11,  Vrms:7.635,  PDIV_kV:2.557, Qavg:18.26, Qpk:432.1, Ncyc:18, computed:false },
+    Aluminium:     { er:7.9,   Ca:5.3124e-12, Cb:1.885e-11, Cc:3.514e-14, Vrms:18.192, PDIV_kV:6.486, Qavg:20.76, Qpk:396.5, Ncyc:10, computed:false },
+    Teflon:        { er:2.1,   Ca:7.708e-10,  Cb:1.112e-10, Cc:2.335e-11, Vrms:11.436, PDIV_kV:3.120, Qavg:16.05, Qpk:366.5, Ncyc:4, computed:true }
+  },
   N2SF6_01: {
     Copper:        { er:28.11, Ca:5.20e-12,   Cb:1.897e-11, Cc:1.25e-11,  Vrms:2.116, PDIV_kV:2.610, Qavg:15.07, Qpk:383.7, Ncyc:18, computed:false },
     Aluminium:     { er:7.9,   Ca:5.324e-12,  Cb:1.897e-11, Cc:3.514e-14, Vrms:2.532, PDIV_kV:2.613, Qavg:15.07, Qpk:460.6, Ncyc:16, computed:false },
     Polypropylene: { er:2.2,   Ca:7.71e-10,   Cb:1.112e-11, Cc:2.44e-11,  Vrms:3.702, PDIV_kV:3.981, Qavg:0.68,  Qpk:18.9,  Ncyc:9,  computed:true  },
     Teflon:        { er:2.1,   Ca:7.71e-10,   Cb:1.112e-11, Cc:2.335e-11, Vrms:1.106, PDIV_kV:1.255, Qavg:13.59, Qpk:481.1, Ncyc:9,  computed:true  }
+  },
+  N2SF6_02: {
+    Copper:        { er:28.11, Ca:5.20e-12,  Cb:1.897e-11, Cc:1.25e-11,  Vrms:4.232, PDIV_kV:1.130, Qavg:14.96, Qpk:241.1, Ncyc:18, computed:false },
+    Aluminium:     { er:7.9,   Ca:5.324e-12, Cb:1.897e-11, Cc:3.514e-14, Vrms:5.065, PDIV_kV:817.2, Qavg:19.77, Qpk:500.1, Ncyc:16, computed:false },
+    Teflon:        { er:2.1,   Ca:7.71e-10,  Cb:1.112e-11, Cc:2.335e-11, Vrms:2.212, PDIV_kV:0.729, Qavg:14.50, Qpk:283.3, Ncyc:9, computed:true }
+  },
+  N2SF6_03: {
+    Copper:        { er:28.11, Ca:5.20e-12,  Cb:1.897e-11, Cc:1.25e-11,  Vrms:6.348, PDIV_kV:2.090, Qavg:12.88, Qpk:294.9, Ncyc:18, computed:false },
+    Aluminium:     { er:7.9,   Ca:5.324e-12, Cb:1.897e-11, Cc:3.514e-14, Vrms:7.597, PDIV_kV:3.067, Qavg:32.74, Qpk:236.6, Ncyc:16, computed:false },
+    Teflon:        { er:2.1,   Ca:7.71e-10,  Cb:1.112e-11, Cc:2.335e-11, Vrms:3.318, PDIV_kV:1.893, Qavg:13.29, Qpk:206.4, Ncyc:9, computed:true }
   },
   HFC_N2: {
     Copper:        { er:28.11, Ca:5.3124e-12, Cb:1.885e-11, Cc:1.25e-11,  Vrms:2.680, PDIV_kV:2.950, Qavg:28.10, Qpk:390.5, Ncyc:17, computed:true  },
@@ -307,28 +327,58 @@ function readNum(id,fallback){
   return isNaN(v)?fallback:v;
 }
 
-function getEntry(){
-  const mat = document.getElementById('aMat').value;
-  const pressure = readNum('aPressure',0.1);
+function getEntry() {
+    const mat = document.getElementById('aMat').value;
+    const pressure = readNum('aPressure', 0.1);
+    const selectedGas = document.getElementById('aGas').value;
 
-  let key="AIR_01";
+    let key = "";
 
-  // Air pressure selection
-  if(Math.abs(pressure-0.091)<0.002){
-      key="AIR_0091";
-  }
-  else if(Math.abs(pressure-0.1)<0.01){
-      key="AIR_01";
-  }
+    // ---------------- AIR ----------------
+    if (selectedGas === "AIR_0091" || selectedGas === "AIR_01") {
 
-  // other gases
-  const selectedGas=document.getElementById('aGas').value;
+        if (Math.abs(pressure - 0.091) < 0.002) {
+            key = "AIR_0091";
+        }
+        else if (Math.abs(pressure - 0.100) < 0.005) {
+            key = "AIR_01";
+        }
+    }
 
-  if(selectedGas==="CO2SF6_01") key="CO2SF6_01";
-  if(selectedGas==="N2SF6_01") key="N2SF6_01";
-  if(selectedGas==="HFC_N2") key="HFC_N2";
+    // ------------- CO2 : SF6 -------------
+    else if (selectedGas === "CO2SF6_01") {
 
-  return DOC[key]?.[mat] || null;
+        if (Math.abs(pressure - 0.100) < 0.005) {
+            key = "CO2SF6_01";
+        }
+        else if (Math.abs(pressure - 0.200) < 0.005) {
+            key = "CO2SF6_02";
+        }
+        else if (Math.abs(pressure - 0.300) < 0.005) {
+            key = "CO2SF6_03";
+        }
+    }
+
+    // ------------- N2 : SF6 -------------
+    else if (selectedGas === "N2SF6_01") {
+
+        if (Math.abs(pressure - 0.100) < 0.005) {
+            key = "N2SF6_01";
+        }
+        else if (Math.abs(pressure - 0.200) < 0.005) {
+            key = "N2SF6_02";
+        }
+        else if (Math.abs(pressure - 0.300) < 0.005) {
+            key = "N2SF6_03";
+        }
+    }
+
+    // ------------- HFC ----------------
+    else if (selectedGas === "HFC_N2") {
+        key = "HFC_N2";
+    }
+
+    return DOC[key]?.[mat] || null;
 }
 
 /* =====================================================================
@@ -441,18 +491,30 @@ function doGenerate(){
     return;
   }
 
-  // RANDOM OMRICON STYLE VARIATION
-  function randTol(max){
-      return (Math.random()*2-1)*max;
-  }
+  // ===============================
+  // RANDOM MEASUREMENT SET
+  // ===============================
 
-  const d2={...d};
+  const d2 = { ...d };
 
-  d2.PDIV_kV=+(d.PDIV_kV+randTol(0.010)).toFixed(3);
+  const measurementSets = [
+      { pdiv:-0.010, qavg:-5.0, qpk:-5.0 },
+      { pdiv:-0.008, qavg:-4.0, qpk:-4.0 },
+      { pdiv:-0.006, qavg:-3.0, qpk:-3.0 },
+      { pdiv:-0.004, qavg:-2.0, qpk:-2.0 },
+      { pdiv:-0.002, qavg:-1.0, qpk:-1.0 },
+      { pdiv: 0.002, qavg: 1.0, qpk: 1.0 },
+      { pdiv: 0.004, qavg: 2.0, qpk: 2.0 },
+      { pdiv: 0.006, qavg: 3.0, qpk: 3.0 },
+      { pdiv: 0.008, qavg: 4.0, qpk: 4.0 },
+      { pdiv: 0.010, qavg: 5.0, qpk: 5.0 }
+  ];
 
-  d2.Qavg=+(d.Qavg+randTol(0.010)).toFixed(3);
+  const r = measurementSets[Math.floor(Math.random() * measurementSets.length)];
 
-  d2.Qpk=+(d.Qpk+randTol(2.0)).toFixed(1);
+  d2.PDIV_kV = +(d.PDIV_kV + r.pdiv).toFixed(3);
+  d2.Qavg    = +(d.Qavg + r.qavg).toFixed(2);
+  d2.Qpk     = +(d.Qpk + r.qpk).toFixed(1);
 
   const srcLabel = d.computed
     ? '\u2705 Computed via PD abc-circuit model:'
